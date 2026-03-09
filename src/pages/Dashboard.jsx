@@ -1,90 +1,100 @@
-import { useState, useEffect } from "react";
-import TodoForm from "../components/TodoForm";
-import TodoItem from "../components/TodoItem";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+import TodoTable from "../components/TodoTable";
+import TodoModal from "../components/TodoModal";
+import { fetchTodos, deleteTodo } from "../api/todoApi";
 
-export default function Dashboard({ darkMode, setDarkMode }) {
+export default function Dashboard({ darkMode = true }) {
+  const navigate = useNavigate();
   const [todos, setTodos] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editingTodo, setEditingTodo] = useState(null);
 
-  useEffect(() => {
-    const fetchTodos = async () => {
-      try {
-        const response = await fetch("http://localhost:5000/api/todos/get", {
-          method: "GET",
-          headers: {
-            "Authorization": `Bearer ${localStorage.getItem("token")}`,
-          },
-        });
+  const isLoggedIn = () =>
+    !!(localStorage.getItem("token") || sessionStorage.getItem("token"));
 
-        const data = await response.json();
-        if (response.ok) {
-          setTodos(data);
-        } else {
-          setError("Error fetching todos");
-        }
-      } catch (err) {
-        setError("An error occurred while fetching todos");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchTodos();
-  }, []);
-
-  const toggleComplete = (todo) => {
-    // Logic for toggling the completion status of the todo
-  };
-
-  const deleteTodo = async (id) => {
+  const loadTodos = async () => {
     try {
-      const response = await fetch(`http://localhost:5000/api/todos/${id}`, {
-        method: "DELETE",
-        headers: {
-          "Authorization": `Bearer ${localStorage.getItem("token")}`,
-        },
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        setTodos((prevTodos) => prevTodos.filter((todo) => todo._id !== id));
-        toast.success("Todo deleted successfully!");  // Success toast
-      } else {
-        toast.error(data.error || "Error deleting todo");  // Error toast
-      }
-    } catch (err) {
-      toast.error("An error occurred while deleting the todo");  // Error toast
-      console.error(err);
+      const data = await fetchTodos();
+      setTodos(data);
+    } catch {
+      toast.error("Failed to fetch todos");
     }
   };
 
-  return (
-    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-white p-12">
-      <TodoForm setTodos={setTodos} />
+  useEffect(() => {
+    if (!isLoggedIn()) {
+      navigate("/login");
+      return;
+    }
+    loadTodos();
+  }, [navigate]);
 
-      <div className="max-w-2xl mx-auto mt-10">
-        <h2 className="text-3xl font-bold mb-6">Your Todos</h2>
+  const handleDelete = async(id)=>{
 
-        {loading ? (
-          <div>Loading...</div>
-        ) : error ? (
-          <div className="text-red-500">{error}</div>
-        ) : (
-          <div>
-            {todos.map((todo) => (
-              <TodoItem
-                key={todo._id}
-                todo={todo}
-                toggleComplete={toggleComplete}
-                deleteTodo={deleteTodo}
-              />
-            ))}
-          </div>
-        )}
+    try{
+
+      await deleteTodo(id);
+
+      setTodos(prev => prev.filter(t => t._id !== id));
+
+      toast.success("Todo deleted");
+
+    }catch (err) {
+      toast.error(err.response?.data?.message || "Delete failed");
+    }
+
+  };
+
+  const openEdit = (todo)=>{
+    setEditingTodo(todo);
+    setModalOpen(true);
+  };
+
+  const openCreate = ()=>{
+    setEditingTodo(null);
+    setModalOpen(true);
+  };
+
+  return(
+
+    <div className="p-10">
+
+      <div className="flex justify-between mb-8">
+
+        <h1 className="text-3xl font-bold dark:text-white">
+          Todo Dashboard
+        </h1>
+
+        <button
+          onClick={openCreate}
+          className="px-4 py-2 bg-sky-500 text-white rounded"
+        >
+          + New Todo
+        </button>
+
       </div>
+
+      <TodoTable
+        todos={todos}
+        deleteTodo={handleDelete}
+        openEdit={openEdit}
+        darkMode={darkMode}
+      />
+
+      {modalOpen && (
+
+        <TodoModal
+          closeModal={()=>setModalOpen(false)}
+          editingTodo={editingTodo}
+          setTodos={setTodos}
+        />
+
+      )}
+
     </div>
+
   );
+
 }

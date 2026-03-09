@@ -11,14 +11,18 @@ function App() {
   const [darkMode, setDarkMode] = useState(true);
   const navigate = useNavigate();
 
+  const isLoggedIn = () =>
+    !!(localStorage.getItem("token") || sessionStorage.getItem("token"));
+
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("email");
+    sessionStorage.removeItem("token");
     navigate("/login");
   };
 
   useEffect(() => {
-    if (localStorage.token) {
+    if (isLoggedIn()) {
       navigate("/dashboard");
     }
   }, [navigate]);
@@ -36,7 +40,7 @@ function App() {
           {/* TOGGLE */}
           <div className="flex items-center space-x-4">
             {
-              localStorage.token &&
+              isLoggedIn() &&
                 <button
                   onClick={handleLogout}
                   className={`${darkMode ? 'font-semibold hover:bg-opacity-80 transition px-4 py-2 rounded-full text-white' : 'font-semibold hover:bg-opacity-80 transition px-4 py-2 rounded-full text-gray-500'}`}

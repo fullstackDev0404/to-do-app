@@ -1,116 +1,174 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { FaEnvelope, FaLock } from "react-icons/fa"; // Icons for email and password
-import Particles from "../components/Particles";
+import { useNavigate, Link } from "react-router-dom";
+import axios from "axios";
+import { toast } from "react-toastify";
 
-export default function Register() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(""); // Error state for validation messages
-  const navigate = useNavigate(); // For redirect after registration
+import { FaUser, FaEnvelope, FaLock, FaEye, FaEyeSlash } from "react-icons/fa";
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError(""); // Clear any previous error messages
+export default function Register(){
 
-    // Validate fields
-    if (!email || !password) {
-      setError("Both email and password are required.");
-      return;
+    const navigate = useNavigate()
+
+    const [username,setUsername] = useState("")
+    const [email,setEmail] = useState("")
+    const [password,setPassword] = useState("")
+    const [showPassword,setShowPassword] = useState(false)
+    const [strength,setStrength] = useState("")
+
+    const inputStyle =
+        "w-full pl-10 pr-10 p-3 rounded-lg bg-gray-100 dark:bg-white/10 text-gray-800 dark:text-white border border-gray-300 dark:border-sky-400/20 focus:ring-2 focus:ring-sky-400 outline-none transition";
+
+    const checkStrength = (pass)=>{
+        let score = 0
+
+        if(pass.length > 6) score++
+        if(/[A-Z]/.test(pass)) score++
+        if(/[0-9]/.test(pass)) score++
+        if(/[!@#$%^&*]/.test(pass)) score++
+
+        if(score <=1) setStrength("Weak")
+        else if(score <=3) setStrength("Medium")
+        else setStrength("Strong")
     }
 
-    setLoading(true);
+    const handleRegister = async (e)=>{
+        e.preventDefault()
 
-    try {
-      // Send registration data to the backend
-      const response = await fetch("http://localhost:5000/api/auth/register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email, password }),
-      });
+        try{
+            const baseURL = process.env.REACT_APP_API_URL || "http://localhost:5000/api"
+            await axios.post(
+                `${baseURL}/auth/register`,
+                { username,email,password }
+            )
 
-      const data = await response.json();
-
-      if (response.ok) {
-        // Registration successful, navigate to login page
-        navigate("/login");
-      } else {
-        // Display error message if registration fails
-        setError(data.error || "Registration failed.");
-      }
-    } catch (err) {
-      console.error(err);
-      setError("An error occurred during registration.");
-    } finally {
-      setLoading(false);
+            toast.success("Account created!")
+            navigate("/login")
+        } catch(err) {
+            const msg = err.response?.data?.message || "Register failed";
+            toast.error(msg);
+        }
     }
-  };
 
-  return (
-    <div className="flex justify-center items-center mt-24">
-      <Particles />
+    return (
 
-      <div className="w-[420px] p-10 rounded-2xl border border-sky-400/30 bg-white/80 dark:bg-white/10 backdrop-blur-xl shadow-[0_0_50px_rgba(56,189,248,0.25)] transition">
-        <h2 className="text-3xl text-sky-400 text-center font-semibold mb-10">
-          Register
-        </h2>
+        <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-[#0f172a]">
+            <form
+                onSubmit={handleRegister}
+                className="w-full max-w-md p-8 bg-white dark:bg-[#1e293b] rounded-2xl shadow-xl space-y-6"
+            >
+                <h2 className="text-2xl font-bold text-center text-gray-800 dark:text-white">
+                    Create Account
+                </h2>
 
-        {error && <div className="text-red-500 text-center mb-4">{error}</div>} {/* Show error message */}
+                {/* USERNAME */}
+                <div>
+                    <label className="text-sm text-gray-600 dark:text-sky-200">
+                        Username
+                    </label>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* EMAIL */}
-          <div>
-            <label className="text-sm text-gray-600 dark:text-sky-200">Email</label>
-            <div className="relative mt-2">
-              <span className="absolute left-3 top-3 text-gray-500 dark:text-white">
-                <FaEnvelope className="w-4 h-4 text-gray-600 dark:text-gray-400 mt-1" />
-              </span>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter your email"
-                className="w-full pl-10 p-3 rounded-lg bg-gray-100 dark:bg-white/20 text-gray-800 dark:text-white border border-gray-300 dark:border-sky-300/20 focus:border-sky-400 outline-none transition"
-              />
-            </div>
-          </div>
+                    <div className="relative mt-2">
 
-          {/* PASSWORD */}
-          <div>
-            <label className="text-sm text-gray-600 dark:text-sky-200">Password</label>
-            <div className="relative mt-2">
-              <span className="absolute left-3 top-3 text-gray-500 dark:text-white">
-                <FaLock className="w-4 h-4 text-gray-600 dark:text-gray-400 mt-1" />
-              </span>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter your password"
-                className="w-full pl-10 p-3 rounded-lg bg-gray-100 dark:bg-white/20 text-gray-800 dark:text-white border border-gray-300 dark:border-sky-300/20 focus:border-sky-400 outline-none transition"
-              />
-            </div>
-          </div>
+                        <span className="absolute left-3 top-3 text-gray-400 mt-1">
+                            <FaUser />
+                        </span>
 
-          {/* BUTTON */}
-          <button
-            disabled={loading}
-            className="w-full py-3 rounded-lg bg-gradient-to-r from-sky-500 to-cyan-400 text-white font-semibold hover:opacity-90 transition"
-          >
-            {loading ? "Registering..." : "Register"}
-          </button>
-        </form>
+                        <input
+                            type="text"
+                            value={username}
+                            onChange={(e)=>setUsername(e.target.value)}
+                            placeholder="Enter username"
+                            className={inputStyle}
+                        />
+                    </div>
+                </div>
 
-        <p className="text-center text-gray-500 dark:text-sky-200 mt-6">
-          Already have an account?{" "}
-          <a href="/login" className="text-sky-500 hover:underline">
-            Login
-          </a>
-        </p>
-      </div>
-    </div>
-  );
+                {/* EMAIL */}
+                <div>
+                    <label className="text-sm text-gray-600 dark:text-sky-200">
+                        Email
+                    </label>
+
+                    <div className="relative mt-2">
+                        <span className="absolute left-3 top-3 text-gray-400 mt-1">
+                            <FaEnvelope />
+                        </span>
+
+                        <input
+                            type="email"
+                            value={email}
+                            onChange={(e)=>setEmail(e.target.value)}
+                            placeholder="Enter email"
+                            className={inputStyle}
+                        />
+                    </div>
+                </div>
+
+                {/* PASSWORD */}
+                <div>
+                    <label className="text-sm text-gray-600 dark:text-sky-200">
+                        Password
+                    </label>
+
+                    <div className="relative mt-2">
+                        <span className="absolute left-3 top-3 text-gray-400 mt-1">
+                            <FaLock />
+                        </span>
+
+                        <input
+                            type={showPassword ? "text":"password"}
+                            value={password}
+                            onChange={(e)=>{
+                            setPassword(e.target.value)
+                            checkStrength(e.target.value)
+                            }}
+                            placeholder="Create password"
+                            className={inputStyle}
+                        />
+
+                        <span
+                            onClick={()=>setShowPassword(!showPassword)}
+                            className="absolute right-3 top-3 cursor-pointer text-gray-400 mt-1"
+                        >
+                            {showPassword ? <FaEyeSlash/>:<FaEye/>}
+                        </span>
+
+                    </div>
+
+                    {/* PASSWORD STRENGTH */}
+                    <p className="text-sm mt-2 text-gray-500">
+                        Strength:{" "}
+                        <span
+                            className={
+                            strength === "Weak"
+                            ? "text-red-500"
+                            : strength === "Medium"
+                            ? "text-yellow-500"
+                            : "text-green-500"
+                            }
+                        >
+                            {strength}
+                        </span>
+                    </p>
+                </div>
+
+                <button
+                    type="submit"
+                    className="w-full p-3 bg-sky-500 hover:bg-sky-600 text-white rounded-lg font-semibold"
+                >
+                    Register
+                </button>
+
+                <p className="text-center text-sm text-gray-500">
+                    Already have an account?{" "}
+
+                    <Link
+                        to="/login"
+                        className="text-sky-500 hover:underline"
+                    >
+                        Login
+                    </Link>
+                </p>
+            </form>
+        </div>
+    )
 }
