@@ -22,11 +22,11 @@ export default function TodoTable({ todos, deleteTodo, openEdit, darkMode = true
       <table className="w-full min-w-[600px] border-collapse table-fixed">
         <thead className={darkMode ? "bg-gray-800 text-white" : "bg-gray-200 text-gray-800"}>
           <tr>
-            <th className="p-3 text-left w-14 shrink-0">No</th>
-            <th className="p-3 text-left w-[20%]">Title</th>
-            <th className="p-3 text-left w-[35%]">Description</th>
-            <th className="p-3 text-center w-24 shrink-0">Completed</th>
-            <th className="p-3 text-center w-44 shrink-0">Actions</th>
+            <th className="p-3 text-left w-[7%]">No</th>
+            <th className="p-3 text-left w-[30%]">Title</th>
+            <th className="p-3 text-left w-[40%]">Description</th>
+            <th className="p-3 text-center w-[8%]">Completed</th>
+            <th className="p-3 text-center w-[15%]">Actions</th>
           </tr>
         </thead>
         <tbody className={darkMode ? "bg-gray-900 text-white" : "bg-white text-gray-800"}>
@@ -35,17 +35,17 @@ export default function TodoTable({ todos, deleteTodo, openEdit, darkMode = true
               key={todo._id}
               className={darkMode ? "border-b border-gray-700" : "border-b border-gray-200"}
             >
-              <td className="p-3 shrink-0">{index + 1}</td>
+              <td className="p-3">{index + 1}</td>
               <td className="p-3 break-words min-w-0 max-w-0 align-top" title={todo.title}>
                 {todo.title}
               </td>
               <td className="p-3 break-words min-w-0 max-w-0 align-top" title={todo.description}>
                 {todo.description}
               </td>
-              <td className="p-3 text-center shrink-0 align-top">
+              <td className="p-3 text-center align-top">
                 {todo.completed ? "✔" : "❌"}
               </td>
-              <td className="p-3 text-center space-x-2 shrink-0 align-top whitespace-nowrap">
+              <td className="p-3 text-center space-x-2 align-top whitespace-nowrap">
                 <button
                   onClick={() => openEdit(todo)}
                   className={editBtnClass}
