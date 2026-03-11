@@ -31,14 +31,44 @@ export default function Register(){
         else setStrength("Strong")
     }
 
+    const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email?.trim())
+
     const handleRegister = async (e)=>{
         e.preventDefault()
+
+        const trimmedUsername = username?.trim()
+        const trimmedEmail = email?.trim()
+
+        if (!trimmedUsername) {
+            toast.error("Username is required")
+            return
+        }
+        if (trimmedUsername.length < 2) {
+            toast.error("Username must be at least 2 characters")
+            return
+        }
+        if (!trimmedEmail) {
+            toast.error("Email is required")
+            return
+        }
+        if (!validateEmail(trimmedEmail)) {
+            toast.error("Please enter a valid email address")
+            return
+        }
+        if (!password) {
+            toast.error("Password is required")
+            return
+        }
+        if (password.length < 6) {
+            toast.error("Password must be at least 6 characters")
+            return
+        }
 
         try{
             const baseURL = process.env.REACT_APP_API_URL || "http://localhost:5000/api"
             await axios.post(
                 `${baseURL}/auth/register`,
-                { username,email,password }
+                { username: trimmedUsername, email: trimmedEmail, password }
             )
 
             toast.success("Account created!")

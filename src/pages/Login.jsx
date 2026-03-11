@@ -16,15 +16,31 @@ const [remember,setRemember] = useState(false)
 
 const inputStyle = "w-full pl-10 pr-10 p-3 rounded-lg bg-gray-100 dark:bg-white/10 text-gray-800 dark:text-white border border-gray-300 dark:border-sky-400/20 focus:ring-2 focus:ring-sky-400 outline-none transition";
 
+const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email?.trim())
+
 const handleLogin = async (e)=>{
     e.preventDefault()
+
+    const trimmedEmail = email?.trim()
+    if (!trimmedEmail) {
+        toast.error("Email is required")
+        return
+    }
+    if (!validateEmail(trimmedEmail)) {
+        toast.error("Please enter a valid email address")
+        return
+    }
+    if (!password) {
+        toast.error("Password is required")
+        return
+    }
 
     try{
 
         const baseURL = process.env.REACT_APP_API_URL || "http://localhost:5000/api"
         const res = await axios.post(
             `${baseURL}/auth/login`,
-            { email,password }
+            { email: trimmedEmail, password }
         )
 
         const token = res.data.token
